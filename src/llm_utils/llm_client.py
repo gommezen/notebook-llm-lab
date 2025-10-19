@@ -7,36 +7,25 @@ so you can reuse it programmatically (e.g., store it, analyze it, or feed it
 into another step).
 """
 
+
 from ollama import chat
+from typing import Any
+import os
 
+DEFAULT_MODEL = os.getenv("OLLAMA_DEFAULT_MODEL", "qwen2.5:7b-instruct-q4_0")
 
-def ask_model(prompt: str, model: str = "phi3:mini") -> str:
+def ask_model(prompt: str, model: str = DEFAULT_MODEL, verbose: bool = True) -> str:
     """
-    Send a user prompt to a local Ollama model and return its textual reply.
-
-    Parameters
-    ----------
-    prompt : str
-        The text prompt to send to the model.
-    model : str, optional
-        The local model to use (e.g. "phi3:mini" or "deepseek-coder:1.3b").
-        Defaults to "phi3:mini".
-
-    Returns
-    -------
-    str
-        The assistant's textual reply extracted from the Ollama response.
+    Send a prompt to a local Ollama model and return the assistant's reply.
     """
+    try:
+        response: Any = chat(model=model, messages=[{"role": "user", "content": prompt}])
+        text = response["message"]["content"].strip()
+    except Exception as e:
+        text = f"[Error querying model '{model}': {e}]"
 
-    # Send the prompt to Ollama's local chat endpoint.
-    # 'messages' is a list of conversation turns; we send just one user message.
-    response = chat(model=model, messages=[{"role": "user", "content": prompt}])
-
-    # Extract the text content from the model's reply.
-    text = response["message"]["content"]
-
-    # Print for immediate feedback in notebooks or terminals.
-    print(text)
+    if verbose:
+        print(text)
 
     # Return the same text so you can use it programmatically:
     #   answer = ask_model("Explain PCA")
