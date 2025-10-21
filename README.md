@@ -62,6 +62,20 @@ notebook-llm-lab/
 ## Setup and configuration
 pip install -r requirements.txt
 
+## Developer setup & running unit tests
+Contributors should install development dependencies and run the small test runner which sets PYTHONPATH and runs only the local unit tests (avoids integration tests that require external services).
+
+PowerShell example:
+```powershell
+python -m pip install -r requirements-dev.txt
+python scripts/run_unit_tests.py
+```
+
+Or run pytest directly with PYTHONPATH set to `src`:
+```powershell
+$env:PYTHONPATH="src"; pytest -q src/test
+```
+
 ## Start Neo4j & Load Data
 Run Neo4j (Desktop or Server), create a database, and add credentials in your .env or config file.
 Use the ingestion notebook to populate the graph with runs.
@@ -73,5 +87,21 @@ Then move to Stage 4 for feature engineering and runs_features.parquet export.
 ## Local LLM Helpers (Ollama)
 Example local models: phi3:mini, deepseek-coder:1.3b, qwen2.5:7b-instruct-q4_0
 Helper utilities live in src/utils/ for prompts, summaries, and narrative insights.
+
+## Configure logging for ingestion utilities
+If you want to see warnings or debug messages from the ingestion modules (e.g. `fit_reader`), configure Python logging before running scripts or notebooks. Example:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# To enable debug-level logs for the fit reader specifically:
+logging.getLogger('notebook_llm_lab.ingestion.fit_reader').setLevel(logging.DEBUG)
+```
+
+This will show warnings when files are skipped and debug traces for low-level parsing fallbacks.
 
 

@@ -100,3 +100,5 @@ __MACOSX/
 # === processed files ===
 processed_data/
 strava_runs.csv
+
+.ipynb_checkpoints/
