@@ -1,0 +1,33 @@
+# === Core Python utilities ===
+pandas>=2.0.0
+numpy>=1.24.0
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+
+# === FIT file handling ===
+fitparse==1.2.0
+
+# === Data visualization & exploration ===
+matplotlib>=3.8.0
+plotly>=5.20.0
+seaborn>=0.13.0
+
+# === Natural language processing ===
+textblob>=0.17.1
+nltk>=3.8.1
+
+# === Local LLM interaction ===
+ollama>=0.1.8
+
+# === Graph database (Neo4j) ===
+neo4j>=5.15.0
+
+# === Interactive analysis ===
+jupyterlab>=4.0.0
+ipykernel>=6.29.0
+notebook>=7.0.0
+
+# === Optional helpers ===
+requests>=2.31.0
+pathlib>=1.0.1
+pyyaml>=6.0.0

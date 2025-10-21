@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/llm_utils/llm_client.py
+src/notebook_llm_lab/__init__ .py
+src/notebook_llm_lab.egg-info/PKG-INFO
+src/notebook_llm_lab.egg-info/SOURCES.txt
+src/notebook_llm_lab.egg-info/dependency_links.txt
+src/notebook_llm_lab.egg-info/requires.txt
+src/notebook_llm_lab.egg-info/top_level.txt
+src/notebook_llm_lab/ingestion/__init__.py
+src/notebook_llm_lab/ingestion/fit_reader.py
+src/scripts/fit_to_parquet.py
+src/scripts/test_fit_reader.py
+src/test/test_llm.py

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notebook-llm-lab"  # distribution name (used by pip)
+version = "0.1.0"
+description = "LLM + FIT reader + experimentation lab"
+authors = [
+    { name = "Niels" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas",
+    "fitparse",
+    "pyarrow"
+]
+
+# Tell setuptools where to find the code
+[tool.setuptools.packages.find]
+where = ["src"]
