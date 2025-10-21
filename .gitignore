@@ -1,0 +1,95 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+*.log
+*.tmp
+*.bak
+
+# === Virtual environments ===
+.venv/
+venv/
+env/
+ENV/
+*.env
+.env*
+
+# === Jupyter & notebooks ===
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+*.ipynb_save
+.notebook_cache/
+profile_default/
+.ipython/
+
+# === Data & results ===
+data/
+datasets/
+outputs/
+results/
+processed_data/
+*.csv
+*.tsv
+*.json
+*.xlsx
+*.parquet
+*.sqlite
+*.db
+*.pkl
+*.joblib
+*.log
+
+# Specifically ignore heavy generated files
+data/strava/processed/
+data/strava/**/*.csv
+data/strava/**/*.parquet
+!data/.keep
+!outputs/.keep
+!results/.keep
+
+# Keep structure but ignore content
+!data/.keep
+!outputs/.keep
+!results/.keep
+
+# === Neo4j & embeddings ===
+neo4j/
+*.graphdb
+*.dump
+embeddings/
+vectors/
+cache/
+
+# === Local experiment notebooks ===
+notebooks/notebook-llm-lab.ipynb
+
+# === Ollama / local models ===
+.ollama/
+models/
+*.bin
+*.gguf
+*.safetensors
+
+# === VS Code / IDEs ===
+.vscode/
+.idea/
+*.code-workspace
+
+# === OS cruft ===
+.DS_Store
+Thumbs.db
+desktop.ini
+__MACOSX/
+
+# === Miscellaneous ===
+logs/
+*.tmp
+*.bak
+
+# === Processed files (safety net) ===
+data/strava/processed/strava_runs.csv
+data/strava/processed/strava_runs.parquet
