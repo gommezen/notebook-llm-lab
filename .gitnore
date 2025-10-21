@@ -35,6 +35,7 @@ data/
 datasets/
 outputs/
 results/
+processed_data/
 *.csv
 *.tsv
 *.json
@@ -45,6 +46,14 @@ results/
 *.log
 *.pkl
 *.joblib
+
+# Specifically ignore heavy generated files
+data/strava/processed/
+data/strava/*.csv
+data/strava/*.parquet
+!data/.keep
+!outputs/.keep
+!results/.keep
 
 # Keep structure but ignore content
 !data/.keep
