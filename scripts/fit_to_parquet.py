@@ -8,7 +8,7 @@ This script scans an input folder for FIT activity files, parses and cleans them
     data/strava/processed/strava_runs.{csv,parquet}
 
 Usage:
-    python scripts/fit_to_parquet.py [-i INPUT_DIR] [-o OUTPUT_DIR]
+    python scripts/fit_to_parquet.py
 
 Requires:
     pandas, pyarrow, and fitparse (or fitfile fork).
@@ -19,6 +19,7 @@ from pathlib import Path
 import argparse
 import pandas as pd
 from notebook_llm_lab.ingestion.fit_reader import load_fit_dir
+
 
 
 def main() -> None:

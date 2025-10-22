@@ -9,15 +9,110 @@ Requires-Dist: pandas
 Requires-Dist: fitparse
 Requires-Dist: pyarrow
 
-# Simple Notebook
+## Notebook LLM Lab — Runs & Graph Analytics
+A lightweight, reproducible lab for Python notebooks, local LLM experiments (Ollama), and a real running analytics pipeline backed by Neo4j.
+You can ingest raw FIT files, explore runs directly from the graph, detect outliers, and export an ML-ready dataset for feature engineering.
 
-This project is a lightweight environment for exploring Python experiments and local LLM interactions using **Ollama**.
+## Highlights
+End-to-end pipeline: FIT → Cleaned tables → Neo4j graph → Exploration & outliers → ML prep export
+Local-first tooling: Python 3.12 + virtual env, Neo4j Desktop/Server, Ollama for local LLM helpers
+Fast iteration: Minimal dependencies, modular scripts, and easily extensible notebooks
 
-## Current Setup
-- Local models: Phi-3 Mini (q4_K_M), DeepSeek Coder 1.3B
-- Environment: Linux Mint, Python 3.12, virtualenv `.venv`
+## Pipeline Stages
+1. Ingestion & Cleaning
+Parse .fit / .fit.gz files, standardize columns, and write cleaned Parquet/CSV (kept locally).
 
-## How to Run
-```bash
-source .venv/bin/activate
-python src/test/test_llm.py
+2. Graph Integration (Neo4j)
+Create (:Run) nodes with metrics (pace, cadence, distance, elevation …) and relationships.
+
+3. Graph Exploration & Outlier Detection
+Query Neo4j as a live data source; visualize distributions; flag anomalies (e.g., pace < 3 or > 8 min/km, distance > 25 km); annotate run types.
+
+4. Feature Engineering & ML Prep (next)
+Build derived metrics (fatigue index, pace variability, elevation ratios), scale/normalize, and export runs_features.parquet for modeling
+
+## Usage & Data Flow
+The lab acts as a local data agent: it ingests your running data, builds a graph, and enables analytics, modeling, and LLM-assisted exploration — all offline.
+
+# 1. Ingest raw FIT files
+Place your .fit or .fit.gz files in data/strava/raw/ and run:
+python scripts/batch_convert_fit.py -i data/strava/raw -o data/strava/processed
+
+This parses and cleans your runs into standardized .parquet and .csv files.
+
+# 2. Load into Neo4j
+Start Neo4j (Desktop or Server) and use the ingestion notebook to create (:Run) nodes with attributes like pace_avg, cadence_avg, and distance_km.
+
+# 3. Explore & Annotate
+Open 03_graph_exploration_outliers.ipynb to query the graph, visualize distributions, detect anomalies, and label clusters (e.g. intervals, long runs).
+
+# 4. Feature Engineering & Export
+Compute derived metrics (fatigue, variability, elevation ratios) and export runs_features.parquet for ML experiments.
+
+# 5. Local LLM Helpers (optional)
+Run Ollama models such as phi3:mini or qwen2.5:7b-instruct-q4_0 for quick summaries and pattern insights — fully local and offline.
+
+## Repo structure
+notebook-llm-lab/
+├─ data/                 # local data (ignored)
+│  └─ strava/
+│     └─ processed/      # processed CSV/Parquet (ignored)
+├─ notebooks/
+│  ├─ 03_graph_exploration_outliers.ipynb
+│  └─ 04_feature_engineering_mlprep.ipynb   # (to be added)
+├─ src/
+│  ├─ ingestion/
+│  │  └─ fit_reader.py
+│  └─ utils/
+├─ scripts/
+│  └─ batch_convert_fit.py
+├─ .venv/                # local virtualenv (ignored)
+├─ .gitignore
+└─ README.md
+
+## Setup and configuration
+pip install -r requirements.txt
+
+## Developer setup & running unit tests
+Contributors should install development dependencies and run the small test runner which sets PYTHONPATH and runs only the local unit tests (avoids integration tests that require external services).
+
+PowerShell example:
+```powershell
+python -m pip install -r requirements-dev.txt
+python scripts/run_unit_tests.py
+```
+
+Or run pytest directly with PYTHONPATH set to `src`:
+```powershell
+$env:PYTHONPATH="src"; pytest -q src/test
+```
+
+## Start Neo4j & Load Data
+Run Neo4j (Desktop or Server), create a database, and add credentials in your .env or config file.
+Use the ingestion notebook to populate the graph with runs.
+
+## Explore & Export
+Use the Stage 3b notebook to explore, visualize, and export data.
+Then move to Stage 4 for feature engineering and runs_features.parquet export.
+
+## Local LLM Helpers (Ollama)
+Example local models: phi3:mini, deepseek-coder:1.3b, qwen2.5:7b-instruct-q4_0
+Helper utilities live in src/utils/ for prompts, summaries, and narrative insights.
+
+## Configure logging for ingestion utilities
+If you want to see warnings or debug messages from the ingestion modules (e.g. `fit_reader`), configure Python logging before running scripts or notebooks. Example:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# To enable debug-level logs for the fit reader specifically:
+logging.getLogger('notebook_llm_lab.ingestion.fit_reader').setLevel(logging.DEBUG)
+```
+
+This will show warnings when files are skipped and debug traces for low-level parsing fallbacks.
+
+

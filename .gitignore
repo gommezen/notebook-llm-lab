@@ -1,4 +1,9 @@
-# === Python ===
+# ==============================================================
+#  notebook-llm-lab  |  Git ignore rules
+#  Purpose: keep repo lean, reproducible, and free of local data
+# ==============================================================
+
+# === Python bytecode / build artifacts ===
 __pycache__/
 *.py[cod]
 *.pyo
@@ -18,7 +23,7 @@ ENV/
 *.env
 .env*
 
-# === Jupyter & notebooks ===
+# === Jupyter / IPython ===
 .ipynb_checkpoints/
 *.nbconvert.ipynb
 *.ipynb_save
@@ -26,37 +31,37 @@ ENV/
 profile_default/
 .ipython/
 
-# === Data & results ===
+# === Data & results (ignore large/generated content) ===
 data/
 datasets/
 outputs/
 results/
 processed_data/
+*.sqlite
+*.db
+*.pkl
+*.joblib
 *.csv
 *.tsv
 *.json
 *.xlsx
 *.parquet
-*.sqlite
-*.db
-*.pkl
-*.joblib
-*.log
 
-# Specifically ignore heavy generated files
+# --- Strava data ---
 data/strava/processed/
 data/strava/**/*.csv
 data/strava/**/*.parquet
+
+# Keep placeholder files so folders exist in repo
 !data/.keep
 !outputs/.keep
 !results/.keep
 
-# Keep structure but ignore content
-!data/.keep
-!outputs/.keep
-!results/.keep
+# Allow small, version-controlled metadata (manifests, configs)
+!data/strava/processed/data_quality_manifest.csv
+!data/strava/processed/run_summary_cleaned.parquet
 
-# === Neo4j & embeddings ===
+# === Neo4j & embeddings caches ===
 neo4j/
 *.graphdb
 *.dump
@@ -74,7 +79,7 @@ models/
 *.gguf
 *.safetensors
 
-# === VS Code / IDEs ===
+# === Editors / IDEs ===
 .vscode/
 .idea/
 *.code-workspace
@@ -87,9 +92,6 @@ __MACOSX/
 
 # === Miscellaneous ===
 logs/
+*.log
 *.tmp
 *.bak
-
-# === Processed files (safety net) ===
-data/strava/processed/strava_runs.csv
-data/strava/processed/strava_runs.parquet

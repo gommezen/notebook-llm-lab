@@ -14,7 +14,7 @@ shapes by trying `get_values()`, `fields` (dict or iterable), and a safe
 iterable fallback.
 
 Usage:
-    from src.notebook_llm_lab.ingestion.fit_reader import read_and_clean_fit, load_fit_dir
+    from notebook_llm_lab.ingestion.fit_reader import read_and_clean_fit, load_fit_dir
     df = load_fit_dir("data/strava/raw")
 
 Requires:
@@ -22,11 +22,11 @@ Requires:
     reader library is not available.
 """
 
-import gzip
 import logging
+import gzip
+import io
 from pathlib import Path
 from typing import Dict, Any
-
 import pandas as pd
 
 try:
@@ -40,8 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 def _extract_fields_from_message(record) -> Dict[str, Any]:
-    """
-    Return a mapping of field-name -> value for a FIT message.
+    """Return a mapping of field-name -> value for a FIT message.
 
     Tries, in order:
     1. record.get_values() -> dict
@@ -62,7 +61,6 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
                 if data:
                     return data
         except Exception:
-            # keep trying other fallbacks
             logger.debug("record.get_values() raised, falling back", exc_info=True)
 
     # 2) record.fields may be a dict or an iterable of field objects
@@ -70,7 +68,6 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
     if fields is not None:
         try:
             if isinstance(fields, dict):
-                # dict values may be field objects or raw values
                 for k, v in fields.items():
                     if v is None:
                         continue
@@ -82,7 +79,6 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
                     else:
                         data[k] = v
             else:
-                # iterable of field objects
                 for f in fields:
                     name = getattr(f, "name", None)
                     value = getattr(f, "value", None)
@@ -102,9 +98,7 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
                 data[name] = value
         return data
     except Exception:
-        # Give up gracefully
         return {}
-
 
 def read_fit(path: Path) -> pd.DataFrame:
     """Read a single .fit or .fit.gz file and return a DataFrame of record data."""
@@ -114,34 +108,32 @@ def read_fit(path: Path) -> pd.DataFrame:
         return pd.DataFrame()
 
     try:
-        # --- Open FIT file (support .fit and .fit.gz) ---
+        # Handle .fit.gz by decompressing to memory
         if path.suffix == ".gz":
+            import gzip, io
             with gzip.open(path, "rb") as f:
-                fitfile = FitFile(f)
+                file_bytes = f.read()
+            fitfile = FitFile(io.BytesIO(file_bytes))
         else:
             fitfile = FitFile(str(path))
 
-        data: Dict[str, list] = {}
-
-        # Parse only 'record' messages (fitparse supports get_messages("record"))
+        rows = []  # <- list of dicts (one per record)
         for record in fitfile.get_messages("record"):
             if record is None:
                 continue
             try:
                 fields = _extract_fields_from_message(record)
-                if not fields:
-                    # nothing extracted — skip
-                    continue
-                for name, value in fields.items():
-                    if value is not None:
-                        data.setdefault(name, []).append(value)
+                if fields:
+                    rows.append(fields)
             except Exception as e:
                 logger.debug("Skipping bad record in %s: %s", path.name, e, exc_info=True)
                 continue
 
-        df = pd.DataFrame(data)
-        if df.empty:
+        if not rows:
             logger.warning("No record data in %s", path.name)
+            return pd.DataFrame()
+
+        df = pd.DataFrame.from_records(rows)  # robust to varying keys/lengths
         return df
 
     except Exception as e:
@@ -177,7 +169,7 @@ def _add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     if "timestamp" in df.columns:
         df = (
-            df.dropna(subset=["timestamp"]) 
+            df.dropna(subset=["timestamp"])
             .sort_values("timestamp")
             .reset_index(drop=True)
         )
