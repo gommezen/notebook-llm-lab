@@ -3,9 +3,10 @@
 Run locally with: python scripts/run_unit_tests.py
 This avoids collecting integration tests that require external services.
 """
+
 import os
-import sys
 import subprocess
+import sys
 
 
 def main() -> int:

@@ -1,7 +1,3 @@
-import types
-
-import pytest
-
 from notebook_llm_lab.ingestion.fit_reader import _extract_fields_from_message
 
 
@@ -34,7 +30,10 @@ def test_fields_iterable():
 
 def test_fields_dict_of_fieldobjs():
     class Rec:
-        fields = {"speed": DummyField("speed", 4.0), "distance": DummyField("distance", 2000)}
+        fields = {
+            "speed": DummyField("speed", 4.0),
+            "distance": DummyField("distance", 2000),
+        }
 
     rec = Rec()
     out = _extract_fields_from_message(rec)

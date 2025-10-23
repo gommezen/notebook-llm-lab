@@ -1,0 +1,19 @@
+# --- Control GitHub Linguist language detection -----------------------------
+
+# 1. Treat .ipynb files as secondary and not dominant
+*.ipynb linguist-detectable=true
+notebooks/* linguist-detectable=true
+# but give them less weight
+*.ipynb linguist-documentation=true
+
+# 2. Ensure Python files are always treated as Python
+*.py linguist-language=Python
+
+# 3. Recognize Neo4j Cypher files (manual override for .cypher or .cql)
+*.cypher linguist-language=Cypher
+*.cql linguist-language=Cypher
+
+# 4. Exclude irrelevant or large non-code assets
+data/* linguist-detectable=false
+outputs/* linguist-detectable=false
+.venv/* linguist-detectable=false

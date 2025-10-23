@@ -15,11 +15,13 @@ Requires:
 """
 
 from __future__ import annotations
-from pathlib import Path
+
 import argparse
-import pandas as pd
+from pathlib import Path
+
 from notebook_llm_lab.ingestion.fit_reader import load_fit_dir
 
+# import pandas as pd
 
 
 def main() -> None:

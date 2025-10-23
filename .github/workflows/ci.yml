@@ -1,17 +1,22 @@
-## CI workflow for running unit tests
-##
-## Purpose:
-##   Run the project's unit-only tests in GitHub Actions. This job installs
-##   dependencies and runs pytest only against `src/test` to avoid integration
-##   tests that require external services (Neo4j, Ollama, etc.).
-##
-## Local usage:
-##   To reproduce the CI steps locally, install dev dependencies and run:
-##
-##     python -m pip install -r requirements-dev.txt
-##     # or use the helper script below which sets PYTHONPATH for tests:
-##     python scripts/run_unit_tests.py
-##
+# -----------------------------------------------------------------------------
+# 🧪 Continuous Integration Workflow
+#
+# Purpose:
+#   1. Lint & style-check all Python code with flake8, black, and isort
+#   2. Run unit tests (fast, isolated) under pytest
+#   3. Optionally validate notebooks for syntax/output issues
+#
+# Location:
+#   .github/workflows/ci.yml
+#
+# Local reproduction:
+#   pip install -r requirements-dev.txt
+#   black --check .
+#   isort --check-only .
+#   flake8 .
+#   pytest -q src/test
+# -----------------------------------------------------------------------------
+
 name: CI
 
 on:
@@ -21,25 +26,61 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  build-test:
+    name: Lint & Test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # --- Checkout code ---
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # --- Setup Python ---
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
+      # --- Cache dependencies ---
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # --- Install dependencies ---
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run unit tests (src/test only)
+      # --- Lint: flake8 ---
+      - name: Run flake8
+        run: flake8 src scripts notebooks
+
+      # --- Format: black ---
+      - name: Check code formatting with black
+        run: black --check src scripts notebooks
+
+      # --- Import order: isort ---
+      - name: Check import ordering with isort
+        run: isort --check-only src scripts notebooks
+
+      # --- Run unit tests ---
+      - name: Run pytest (unit only)
         env:
           PYTHONPATH: src
+        run: pytest -q src/test --disable-warnings --maxfail=1 -vv
+
+      # --- Optional: validate notebooks ---
+      - name: Validate notebooks (syntax only)
+        if: always()
         run: |
-          pytest -q src/test
+          pip install nbconvert nbformat
+          python -m nbconvert --execute --allow-errors --to notebook \
+            --output /dev/null notebooks/05_clustering_and_explainability.ipynb
+          python -m nbconvert --execute --allow-errors --to notebook \
+            --output /dev/null notebooks/06_modeling_and_explainability.ipynb

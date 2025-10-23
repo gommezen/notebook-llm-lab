@@ -3,20 +3,56 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "notebook-llm-lab"  # distribution name (used by pip)
+name = "notebook-llm-lab"
 version = "0.1.0"
 description = "LLM + FIT reader + experimentation lab"
-authors = [
-    { name = "Niels" }
-]
+authors = [{ name = "Niels" }]
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "pandas",
     "fitparse",
-    "pyarrow"
+    "pyarrow",
 ]
 
-# Tell setuptools where to find the code
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# -----------------------------------------------------------------------------
+# 🧰 Developer tool configuration
+# -----------------------------------------------------------------------------
+
+[tool.black]
+line-length = 88
+target-version = ["py39", "py310", "py311"]
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+known_first_party = ["notebook_llm_lab"]
+skip = [".venv"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = [
+    "E203",  # handled by black
+    "W503"   # line break before binary operator
+]
+exclude = [
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+per-file-ignores = [
+    "__init__.py:F401"
+]
+
+[tool.pytest.ini_options]
+addopts = "-q --disable-warnings"
+testpaths = ["src/test"]
+pythonpath = ["src"]
+

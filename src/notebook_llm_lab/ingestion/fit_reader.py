@@ -5,37 +5,36 @@ from __future__ import annotations
 """
 Convert Strava .fit/.fit.gz files to a cleaned pandas DataFrame.
 
-This module provides helpers to read Garmin/Strava FIT activity files (single
-or gzipped) and normalize the resulting records into a DataFrame with a few
-derived convenience columns (distance_km, pace_min_per_km, lat/lon).
+Provides helpers to read Garmin/Strava FIT activity files (single or gzipped)
+and normalize the resulting records into a DataFrame with convenience columns
+(distance_km, pace_min_per_km, lat/lon).
 
-The reader is defensive — it supports multiple FIT libraries and message
-shapes by trying `get_values()`, `fields` (dict or iterable), and a safe
-iterable fallback.
+The reader is defensive—it supports multiple FIT libraries and message shapes
+by trying get_values(), fields (dict or iterable), and a safe iterable fallback.
 
 Usage:
-    from notebook_llm_lab.ingestion.fit_reader import read_and_clean_fit, load_fit_dir
+    from notebook_llm_lab.ingestion.fit_reader import (
+        read_and_clean_fit,
+        load_fit_dir,
+    )
     df = load_fit_dir("data/strava/raw")
 
 Requires:
-    pandas and (optionally) fitparse. The code will log an error if a FIT
-    reader library is not available.
+    pandas and (optionally) fitparse. Logs an error if no FIT reader is found.
 """
 
 import logging
-import gzip
-import io
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
+
 import pandas as pd
 
 try:
-    from fitparse import FitFile  # optional dependency; used when available
-except Exception:  # pragma: no cover - graceful degradation when fitparse isn't installed
+    from fitparse import FitFile  # optional dependency
+except Exception:  # pragma: no cover
     FitFile = None  # type: ignore
 
 SEMICIRCLE_TO_DEG = 180 / (2**31)
-
 logger = logging.getLogger(__name__)
 
 
@@ -45,7 +44,7 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
     Tries, in order:
     1. record.get_values() -> dict
     2. record.fields as a dict or iterable of field objects (.name/.value)
-    3. fallback to iterating `record` (some parsers yield field objects)
+    3. Fallback: iterate record (some parsers yield field objects)
     """
     data: Dict[str, Any] = {}
 
@@ -63,7 +62,7 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
         except Exception:
             logger.debug("record.get_values() raised, falling back", exc_info=True)
 
-    # 2) record.fields may be a dict or an iterable of field objects
+    # 2) record.fields may be a dict or iterable of field objects
     fields = getattr(record, "fields", None)
     if fields is not None:
         try:
@@ -89,7 +88,7 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
         except Exception:
             logger.debug("record.fields parsing failed, falling back", exc_info=True)
 
-    # 3) Fallback: some message objects are iterable and yield field objects
+    # 3) Fallback: some message objects are iterable
     try:
         for f in record:
             name = getattr(f, "name", None)
@@ -100,24 +99,29 @@ def _extract_fields_from_message(record) -> Dict[str, Any]:
     except Exception:
         return {}
 
+
 def read_fit(path: Path) -> pd.DataFrame:
     """Read a single .fit or .fit.gz file and return a DataFrame of record data."""
     path = Path(path)
     if FitFile is None:
-        logger.error("FIT reader library (fitparse) is not installed; cannot read FIT files.")
+        logger.error(
+            "FIT reader library (fitparse) is not installed; cannot read FIT files."
+        )
         return pd.DataFrame()
 
     try:
         # Handle .fit.gz by decompressing to memory
         if path.suffix == ".gz":
-            import gzip, io
+            import gzip
+            import io
+
             with gzip.open(path, "rb") as f:
                 file_bytes = f.read()
             fitfile = FitFile(io.BytesIO(file_bytes))
         else:
             fitfile = FitFile(str(path))
 
-        rows = []  # <- list of dicts (one per record)
+        rows = []
         for record in fitfile.get_messages("record"):
             if record is None:
                 continue
@@ -126,15 +130,15 @@ def read_fit(path: Path) -> pd.DataFrame:
                 if fields:
                     rows.append(fields)
             except Exception as e:
-                logger.debug("Skipping bad record in %s: %s", path.name, e, exc_info=True)
-                continue
+                logger.debug(
+                    "Skipping bad record in %s: %s", path.name, e, exc_info=True
+                )
 
         if not rows:
             logger.warning("No record data in %s", path.name)
             return pd.DataFrame()
 
-        df = pd.DataFrame.from_records(rows)  # robust to varying keys/lengths
-        return df
+        return pd.DataFrame.from_records(rows)
 
     except Exception as e:
         logger.exception("Failed to read %s: %s", path.name, e)
@@ -156,7 +160,9 @@ def _add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     if "speed" in df.columns:
         df["pace_min_per_km"] = df["speed"].apply(
-            lambda v: (1000.0 / v) / 60.0 if isinstance(v, (int, float)) and v > 0 else None
+            lambda v: (
+                (1000.0 / v) / 60.0 if isinstance(v, (int, float)) and v > 0 else None
+            )
         )
 
     if "enhanced_altitude" in df.columns and "altitude" not in df.columns:
@@ -179,8 +185,7 @@ def _add_derived_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def read_and_clean_fit(path: Path) -> pd.DataFrame:
     """Load and clean a single FIT file."""
-    raw = read_fit(path)
-    return _add_derived_columns(raw)
+    return _add_derived_columns(read_fit(path))
 
 
 def load_fit_dir(dirpath: Path | str) -> pd.DataFrame:
